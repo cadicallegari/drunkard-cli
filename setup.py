@@ -6,6 +6,6 @@ setup(
     packages=['drunkard-cli'],
     entry_points={
         'console_scripts': [
-            'drunkard-cli = drunkard-cli.__main__:main'
+            'drunkard-cli = drunkard-cli.main:main'
         ]
     })
