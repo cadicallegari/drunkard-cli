@@ -48,10 +48,10 @@ def data_loader(directory, extensions):
 
 @click.command()
 @click.option(
-    '--host', '-h',
+    '--url', '-u',
     type=click.STRING,
     required=True,
-    help='path to the directory cotaining the files'
+    help='server url where to send records'
 )
 @click.option(
     '--directory', '-d', required=True,
@@ -59,17 +59,17 @@ def data_loader(directory, extensions):
     help='path to the directory cotaining the files',
 )
 @click.option(
-    '--extensions', '-e', 'extensions',
+    '--extensions', '-e',
     type=click.STRING,
     default='json,jsonl',
     help='file extensions'
 )
 @click_log.simple_verbosity_option(logger)
-def cli(host, directory, extensions):
+def cli(url, directory, extensions):
     loader = data_loader(directory, extensions)
     logger.info("Sending ...")
-    data_sender(loader, host)
-    logger.info("Done")
+    count = data_sender(loader, url)
+    logger.info(f"Done: {count} records sent")
 
 
 if __name__ == '__main__':
