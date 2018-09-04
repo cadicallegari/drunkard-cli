@@ -10,17 +10,23 @@ logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
 
-def data_sender(loader, host):
+def data_sender(loader, url):
+    count = 0
     for r in loader():
         try:
-            r = requests.post(host, json=r)
+            r = requests.post(url, json=r)
             logger.debug(r.status_code)
+            if r.status_code < 300:
+                count += 1
+
         except requests.exceptions.RequestException as e:
             logger.error(e)
             return
         except Exception as e:
             logging.exception(e)
             return
+
+    return count
 
 
 def find_files(directory, extensions):
