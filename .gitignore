@@ -1,1 +1,4 @@
-testdata/
+*__pycache__
+.virtualenv/
+*.exclude
+drunkard_cli.egg-info/

@@ -11,9 +11,16 @@ click_log.basic_config(logger)
 
 
 def data_sender(loader, host):
-    for e in loader():
-        r = requests.post(host, json=e)
-        logger.debug(r.status_code)
+    for r in loader():
+        try:
+            r = requests.post(host, json=r)
+            logger.debug(r.status_code)
+        except requests.exceptions.RequestException as e:
+            logger.error(e)
+            return
+        except Exception as e:
+            logging.exception(e)
+            return
 
 
 def find_files(directory, extensions):
