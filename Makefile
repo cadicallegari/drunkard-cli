@@ -4,7 +4,7 @@ init:
 test:
 	@python tests/*.py
 
-install:
+install: init
 	pip3 install -e .
 
 .PHONY: init test
