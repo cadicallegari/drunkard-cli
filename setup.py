@@ -8,4 +8,5 @@ setup(
         'console_scripts': [
             'drunkard-cli = drunkard-cli.main:main'
         ]
-    })
+    }
+)
