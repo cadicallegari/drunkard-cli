@@ -2,3 +2,4 @@
 .virtualenv/
 *.exclude
 drunkard_cli.egg-info/
+*.drunkard.index

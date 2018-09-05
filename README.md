@@ -17,7 +17,7 @@ make install
 A example of how to use:
 
 ```
-drunkard-cli -h http://localhost:8080/records -d tests/testdata/
+drunkard-cli -u http://localhost:8080/records -d tests/testdata/
 ```
 
 you could find more options running the help command
