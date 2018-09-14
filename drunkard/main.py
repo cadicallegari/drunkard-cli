@@ -34,6 +34,8 @@ def _load_index_file(posix_file):
 def data_sender(files, url):
     count = 0
 
+    session = requests.Session()
+
     for f in files():
         dir_info = _load_index_file(f)
         if f.name in dir_info and dir_info[f.name].get("success", False):
@@ -48,7 +50,7 @@ def data_sender(files, url):
                 continue
 
             try:
-                r = requests.post(url, json=r)
+                r = session.post(url, json=r)
                 logger.debug(r.status_code)
                 if r.status_code < 300:
                     count += 1
