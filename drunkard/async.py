@@ -2,7 +2,6 @@ import asyncio
 import json
 import pathlib
 import logging
-from os import path
 from aiohttp import ClientSession
 
 import click
@@ -29,68 +28,30 @@ def load_json(filename):
             yield json.loads(line)
 
 
-async def fetch(url, session):
-    async with session.get(url) as response:
-        delay = response.headers.get("DELAY")
-        date = response.headers.get("DATE")
-        print("{}:{} with delay {}".format(date, response.url, delay))
-        return await response.read()
-
-
-async def bound_fetch(sem, url, session):
-    # Getter function with semaphore.
-    async with sem:
-        await fetch(url, session)
-
-
 async def post_record(url, session, data):
     async with session.post(url, json=data) as response:
-        # delay = response.headers.get("DELAY")
-        # date = response.headers.get("DATE")
-        # print("{}:{} with delay {}".format(date, response.url, delay))
         return await response.read()
 
 
-async def bound_post(sem, url, session, r):
-    # Getter function with semaphore.
-    async with sem:
-        await post_record(url, session, r)
+async def newsProducer(queue, files):
+    for f in files():
+        for r in load_json(f):
+            # print("putting", r)
+            await queue.put(r)
+    await queue.put(None)
+    print("feito")
 
 
-async def send_file(sem, session, f, url):
-    with open(f, 'rb') as file:
-        await session.post(url, data=file)
-
-
-async def run(r, files, url):
-    tasks = []
-    # create instance of Semaphore
-    sem = asyncio.Semaphore(r)
-
-    # Create client session that will ensure we dont open new connection
-    # per each request.
+async def newsConsumer(id, queue, url):
     async with ClientSession() as session:
-        for f in files():
-            # pass Semaphore and session to every GET request
-            # task = asyncio.ensure_future(bound_fetch(sem, url.format(i), session))
-
-            for r in load_json(f):
-                task = asyncio.ensure_future(
-                    bound_post(sem, url, session, r)
-                )
-                tasks.append(task)
-            # task = asyncio.ensure_future(
-            #     send_file(sem, session, f, url)
-            # )
-            # tasks.append(task)
-
-            # task = asyncio.ensure_future(
-            #     send_file(sem, session, f, url)
-            # )
-            # tasks.append(task)
-
-        responses = asyncio.gather(*tasks)
-        await responses
+        while True:
+            item = await queue.get()
+            if item is None:
+                # the producer emits None to indicate that it is done
+                print(f"finishing {id}")
+                break
+            await post_record(url, session, item)
+            queue.task_done()
 
 
 @click.command()
@@ -120,15 +81,48 @@ async def run(r, files, url):
 @click_log.simple_verbosity_option(logger)
 def cli(url, directory, extensions, force):
     file_loader = find_files(directory, extensions)
-    # logger.info("Sending ...")
-    # count = data_sender(file_loader, url)
-    # logger.info(f"Done: {count} records sent")
 
-    number = 10000
     loop = asyncio.get_event_loop()
+    queue = asyncio.Queue(loop=loop, maxsize=20)
 
-    future = asyncio.ensure_future(run(number, file_loader, url))
-    loop.run_until_complete(future)
+    try:
+
+        loop.run_until_complete(asyncio.gather(
+            newsProducer(queue, file_loader),
+            newsConsumer(1, queue, url),
+            # newsConsumer(2, queue, url),
+            # newsConsumer(3, queue, url),
+            # newsConsumer(4, queue, url),
+            # newsConsumer(5, queue, url),
+            # newsConsumer(6, queue, url),
+            # newsConsumer(7, queue, url),
+            # newsConsumer(8, queue, url),
+            # newsConsumer(9, queue, url),
+            # newsConsumer(10, queue, url),
+            # newsConsumer(11, queue, url),
+            # newsConsumer(12, queue, url),
+            # newsConsumer(13, queue, url),
+            # newsConsumer(14, queue, url),
+            # newsConsumer(16, queue, url),
+            # newsConsumer(17, queue, url),
+            # newsConsumer(18, queue, url),
+            # newsConsumer(19, queue, url),
+            # newsConsumer(20, queue, url),
+            # newsConsumer(21, queue, url),
+            # newsConsumer(22, queue, url),
+            # newsConsumer(23, queue, url),
+            # newsConsumer(24, queue, url),
+            # newsConsumer(25, queue, url),
+            # newsConsumer(26, queue, url),
+            # newsConsumer(27, queue, url),
+            # newsConsumer(28, queue, url),
+            # newsConsumer(29, queue, url),
+        ))
+
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.close()
 
 
 if __name__ == '__main__':
