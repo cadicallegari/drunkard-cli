@@ -23,6 +23,12 @@ def find_files(directory, extensions):
     return files
 
 
+def load_json(filename):
+    with open(filename) as f:
+        for line in f:
+            yield json.loads(line)
+
+
 async def fetch(url, session):
     async with session.get(url) as response:
         delay = response.headers.get("DELAY")
@@ -67,18 +73,21 @@ async def run(r, files, url):
         for f in files():
             # pass Semaphore and session to every GET request
             # task = asyncio.ensure_future(bound_fetch(sem, url.format(i), session))
-            # task = asyncio.ensure_future(
-            #     bound_post(sem, url, session)
-            # )
+
+            for r in load_json(f):
+                task = asyncio.ensure_future(
+                    bound_post(sem, url, session, r)
+                )
+                tasks.append(task)
             # task = asyncio.ensure_future(
             #     send_file(sem, session, f, url)
             # )
             # tasks.append(task)
 
-            task = asyncio.ensure_future(
-                send_file(sem, session, f, url)
-            )
-            tasks.append(task)
+            # task = asyncio.ensure_future(
+            #     send_file(sem, session, f, url)
+            # )
+            # tasks.append(task)
 
         responses = asyncio.gather(*tasks)
         await responses
